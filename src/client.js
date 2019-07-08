@@ -7,7 +7,7 @@ import ReactDOM from 'react-dom';
 import createStore from './redux/create';
 import ApiClient from './helpers/ApiClient';
 import io from 'socket.io-client';
-import {Provider} from 'react-redux';
+import { Provider } from 'react-redux';
 import { Router, browserHistory } from 'react-router';
 import { syncHistoryWithStore } from 'react-router-redux';
 import { ReduxAsyncConnect } from 'redux-async-connect';
@@ -22,7 +22,7 @@ const store = createStore(_browserHistory, client, window.__data);
 const history = syncHistoryWithStore(_browserHistory, store);
 
 function initSocket() {
-  const socket = io('', {path: '/ws'});
+  const socket = io('', { path: '/ws' });
   socket.on('news', (data) => {
     console.log(data);
     socket.emit('my other event', { my: 'data from client' });
@@ -38,8 +38,8 @@ global.socket = initSocket();
 
 const component = (
   <Router render={(props) =>
-        <ReduxAsyncConnect {...props} helpers={{client}} filter={item => !item.deferred} />
-      } history={history}>
+    <ReduxAsyncConnect {...props} helpers={{ client }} filter={item => !item.deferred} />
+  } history={history}>
     {getRoutes(store)}
   </Router>
 );
@@ -57,6 +57,24 @@ if (process.env.NODE_ENV !== 'production') {
   if (!dest || !dest.firstChild || !dest.firstChild.attributes || !dest.firstChild.attributes['data-react-checksum']) {
     console.error('Server-side React render was discarded. Make sure that your initial render does not contain any client-side code.');
   }
+}
+
+// purpose: inject widget only on these conditions
+if (window.location.search.includes('widgetInstalled=false')) {
+  sessionStorage.removeItem('widgetInstalled');
+} else if (window.location.search.includes('widgetInstalled=true')
+  || sessionStorage.getItem('widgetInstalled') === 'true') {
+  window.helppierDev = true;
+  window.help_company_key = '07b272c75d4db593b5da3badcefe766d';
+  const script = document.createElement('script');
+  script.setAttribute('src',
+    'http://localhost:3000/widget/js/start.js?help_company_key=07b272c75d4db593b5da3badcefe766d');
+  script.setAttribute('id', 'helppierEmbed');
+  script.setAttribute('defer', '');
+  document.head.appendChild(script);
+
+  // property can now be added on sessionStorage so widget can work on all pages
+  sessionStorage.setItem('widgetInstalled', true);
 }
 
 if (__DEVTOOLS__ && !window.devToolsExtension) {
